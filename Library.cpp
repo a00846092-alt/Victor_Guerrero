@@ -48,6 +48,14 @@ Loan* Library::findActiveLoan(const string& memberId, const string& isbn) {
     }
     return nullptr;
 }
+CD* Library::findCD(const string& id) {
+    for (auto& cd : cds) {
+        if (cd.getId() == id) {
+            return &cd;
+        }
+    }
+    return nullptr;
+}
 
 void Library::addBook(const Book& book) {
     books.push_back(book);
@@ -138,3 +146,92 @@ bool Library::returnBook(const string& memberId, const string& isbn, const strin
     return true;
 }
 
+bool Library::removeBook(string isbn) {
+    for (auto it = books.begin(); it != books.end(); ++it) {
+        if (it->getIsbn() == isbn) {
+            books.erase(it);
+            cout << "Book removed successfully." << endl;
+            return true;
+        }
+    }
+    cout << "Book not found." << endl;
+    return false;
+}
+
+bool Library::removeMember(string memberId) {
+    for (auto it = members.begin(); it != members.end(); ++it) {
+        if (it->getId() == memberId) {
+            members.erase(it);
+            cout << "Member removed successfully." << endl;
+            return true;
+        }
+    }
+    cout << "Member not found." << endl;
+    return false;
+}
+
+void Library::searchBook(string query, bool byIsbn) const {
+    for (const auto& book : books) {
+        if (byIsbn) {
+            if (book.getIsbn() == query) {
+                cout << "Book found (by ISBN):" << endl;
+                book.printInfo();
+                return;
+            }
+        } else {
+            if (book.getTitle() == query) {
+                cout << "Book found (by title):" << endl;
+                book.printInfo();
+                return;
+            }
+        }
+    }
+    cout << "Book not found." << endl;
+}
+void Library::addCD(const CD& cd) {
+    cds.push_back(cd);
+}
+
+void Library::listCDs() const {
+    cout << "=== CDs ===" << endl;
+    for (const auto& cd : cds) {
+        cd.printInfo();
+    }
+}
+
+bool Library::borrowCD(const string& memberId, const string& cdId, const string& borrowDate) {
+    Member* member = findMember(memberId);
+    if (!member) {
+        cout << "Member not found." << endl;
+        return false;
+    }
+
+    CD* cd = findCD(cdId);
+    if (!cd) {
+        cout << "CD not found." << endl;
+        return false;
+    }
+
+    // Creamos un préstamo usando cdId como si fuera un "isbn"
+    loans.push_back(Loan(cdId, memberId, borrowDate));
+    cout << "CD borrowed successfully." << endl;
+    return true;
+}
+
+bool Library::returnCD(const string& memberId, const string& cdId, const string& returnDate) {
+    Member* member = findMember(memberId);
+    if (!member) {
+        cout << "Member not found." << endl;
+        return false;
+    }
+
+    Loan* loan = findActiveLoan(memberId, cdId);
+    if (!loan) {
+        cout << "No active loan found for this member and CD." << endl;
+        return false;
+    }
+
+    loan->setReturnDate(returnDate);
+    cout << "CD returned successfully." << endl;
+    return true;
+}
